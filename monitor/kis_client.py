@@ -88,8 +88,8 @@ class KISClient:
             r = requests.get(f"{self.base}{path}", headers=headers, params=params, timeout=20)
             try:
                 body = r.json()
-            except ValueError:
-                raise KISError(f"{tr_id}: 비정상 응답 HTTP {r.status_code}")
+            except ValueError as e:
+                raise KISError(f"{tr_id}: 비정상 응답 HTTP {r.status_code}") from e
             if body.get("rt_cd") == "0":
                 cache.put(ns, params, body)
                 return body
