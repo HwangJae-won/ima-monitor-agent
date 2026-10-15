@@ -28,8 +28,15 @@ class KISError(RuntimeError):
 
 class KISClient:
     def __init__(self, appkey: str | None = None, appsecret: str | None = None, kis_env: str | None = None):
-        self.appkey = appkey or require("KIS_APP_KEY")
-        self.appsecret = appsecret or require("KIS_APP_SECRET")
+        # KIS_AUTH_MODE=proxy: 키·토큰을 코드가 전혀 다루지 않는다. 세션의 네트워크 시크릿(프록시)이
+        # openapi.koreainvestment.com 으로 나가는 요청에 authorization/appkey/appsecret 헤더를 붙인다.
+        # 토큰은 사용자가 PC 에서 발급해 시크릿에 넣는다(1일 유효). 기본(env) 모드는 .env 의 키로 직접 발급한다.
+        self.auth_mode = env("KIS_AUTH_MODE", "env")
+        if self.auth_mode == "proxy":
+            self.appkey = self.appsecret = None
+        else:
+            self.appkey = appkey or require("KIS_APP_KEY")
+            self.appsecret = appsecret or require("KIS_APP_SECRET")
         self.kis_env = kis_env or env("KIS_ENV", "prod")
         self.base = KIS_BASE[self.kis_env]
         self.sleep = KIS_SLEEP[self.kis_env]
@@ -72,14 +79,9 @@ class KISClient:
         cached = cache.get(ns, params)
         if cached is not None:
             return cached
-        headers = {
-            "content-type": "application/json; charset=utf-8",
-            "authorization": f"Bearer {self.token()}",
-            "appkey": self.appkey,
-            "appsecret": self.appsecret,
-            "tr_id": tr_id,
-            "custtype": "P",
-        }
+        headers = {"content-type": "application/json; charset=utf-8", "tr_id": tr_id, "custtype": "P"}
+        if self.auth_mode != "proxy":
+            headers.update({"authorization": f"Bearer {self.token()}", "appkey": self.appkey, "appsecret": self.appsecret})
         for attempt in range(4):
             wait = self.sleep - (time.time() - self._last_call)
             if wait > 0:
@@ -94,6 +96,8 @@ class KISClient:
                 cache.put(ns, params, body)
                 return body
             code = body.get("msg_cd", "")
+            if self.auth_mode == "proxy" and code in ("EGW00121", "EGW00123"):  # 토큰 오류·만료
+                raise KISError(f"{tr_id}: {code} — 프록시 시크릿의 토큰이 만료됐을 수 있습니다. PC 에서 토큰을 다시 발급해 시크릿 값을 갱신하세요.")
             if code == "EGW00201" and attempt < 3:  # 초당 거래건수 초과
                 time.sleep(0.5 * (2**attempt))
                 continue
