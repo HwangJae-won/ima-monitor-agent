@@ -1,0 +1,29 @@
+[project]
+name = "ima-monitor-agent"
+version = "0.1.0"
+description = "KIS API·DART 기반 기업금융 사후 모니터링 조사 Agent — IMA 사업 이해를 위한 업무 시뮬레이션"
+requires-python = ">=3.10"
+readme = "README.md"
+license = "Apache-2.0"
+dependencies = [
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "openai>=1.40",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+# E501: 한국어 설명이 긴 줄이 많아 길이 제한은 경고하지 않는다
+ignore = ["E501"]

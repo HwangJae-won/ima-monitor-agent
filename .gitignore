@@ -1,0 +1,16 @@
+# 비밀값
+.env
+.env.*
+!.env.example
+
+# 캐시 · 산출물 (API 응답 캐시에는 계정 식별 정보가 없지만 용량이 크므로 제외)
+data/cache/
+data/*.zip
+data/*.xml
+reports/*/trace_*.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
