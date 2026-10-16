@@ -86,12 +86,25 @@
 
 ## 4. 로컬 시작 절차
 
+macOS / Linux
 ```bash
 git clone https://github.com/HwangJae-won/ima-monitor-agent && cd ima-monitor-agent
-python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env     # 편집기로 열어 아래 값 채우기 (채팅·커밋 금지)
 python -m pytest         # 12 passed 확인
+```
+
+Windows PowerShell (`&&`·`source` 없음, 한 줄씩)
+```powershell
+git clone https://github.com/HwangJae-won/ima-monitor-agent
+cd ima-monitor-agent
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1     # "스크립트 실행 비활성화" 오류 시: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+pip install -r requirements.txt
+Copy-Item .env.example .env
+notepad .env
+python -m pytest
 ```
 
 `.env` 에 채울 것 (로컬은 전부 env 모드)
